@@ -3,9 +3,5 @@
     "ratio_x":1,
     "ratio_y":1,
     "base_size":1000,
-    "max_iter":150,
-    "x_min":-2.0,
-    "x_max":1.0,
-    "mult_files":"m", 
-    "output_png":"output/mandelbrot.png"
+    "output_png":"output/mandelbrot.mp4"
 }

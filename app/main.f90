@@ -1,7 +1,6 @@
-program mandelbrot
+program GOL
     use mpi_f08
     use parameters
-    use mandelbrot, only: mandelbrot_set
     use mpi_utils, only: split_arrays, gather_2d
     implicit none
 
@@ -29,26 +28,14 @@ program mandelbrot
     call MPI_Comm_rank(MPI_COMM_WORLD, rank)
     call MPI_Comm_size(MPI_COMM_WORLD, size)
 
-    if (rank == 0) call print_time(rank, "Starting Mandelbrot set calculation; Splitting arrays...")
+    if (rank == 0) call print_time(rank, "Starting Game-of-Life set calculation; Splitting arrays...")
 
     call split_arrays(y_pix, y_pix_local, local_ny, rank, size)
     allocate(iter_array_local(nx, local_ny))
 
     if (rank == 0) call print_time(rank, "Begin calculation...")
 
-    call mandelbrot_set(x_pix, y_pix_local, iter_array_local, local_ny, rank, size, wp)
 
-    if (files == 's') then
-        if (rank == 0) call print_time(rank, "Combining results...")
-        call gather_2d(iter_array, iter_array_local, local_ny, size)
-        if (rank == 0) then
-            call print_time(rank, "Saving results...")
-            call save_to_binary(iter_array, ny, rank)
-        end if
-    else
-        call print_time(rank, "Saving results...")
-        call save_to_binary(iter_array_local, local_ny, rank)
-    end if
         
     call MPI_Finalize()
 
@@ -82,4 +69,4 @@ contains
     end subroutine print_time
 
 
-end program mandelbrot
+end program GOL
