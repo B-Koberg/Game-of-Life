@@ -3,12 +3,13 @@ module parameters
     use json_module
     implicit none
     public :: wp
-    public :: nx, ny
+    public :: nx, ny, frames, delta_frames
 
     integer :: wp = real64
 
     integer :: ratio_x, ratio_y 
     integer :: base_size 
+    integer :: frames, delta_frames
     
     integer :: nx, ny
 
@@ -31,6 +32,8 @@ contains
             call json%get('ratio_x', ratio_x, is_found); if (.not. is_found) exit json_block
             call json%get('ratio_y', ratio_y, is_found); if (.not. is_found) exit json_block
             call json%get('base_size', base_size, is_found); if (.not. is_found) exit json_block
+            call json%get('frames', frames, is_found); if (.not. is_found) exit json_block
+            call json%get('delta_frames', delta_frames, is_found); if (.not. is_found) exit json_block
         end block json_block
 
 

@@ -2,6 +2,8 @@
     "wp":"real64",
     "ratio_x":1,
     "ratio_y":1,
-    "base_size":1000,
+    "base_size":100,
+    "frames":100,
+    "delta_frames":1,
     "output_png":"output/mandelbrot.mp4"
 }
