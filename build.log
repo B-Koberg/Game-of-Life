@@ -1,0 +1,116 @@
+=== Build gestartet: Fr 26. Jun 13:53:52 CEST 2026 ===
+ <INFO> BUILD_NAME: build/mpifort
+ <INFO> COMPILER:  mpifort
+ <INFO> C COMPILER:  gcc
+ <INFO> CXX COMPILER: g++
+ <INFO> COMPILER OPTIONS:   -Wall -Wextra -fPIC -fmax-errors=1 -g -fcheck=bounds -fcheck=array-temps -fbacktrace -fcoarray=single -fPIC
+ <INFO> C COMPILER OPTIONS:  
+ <INFO> CXX COMPILER OPTIONS: 
+ <INFO> LINKER OPTIONS:  
+ <INFO> INCLUDE DIRECTORIES:  []
+[100%] Project compiled successfully.
+ + mpirun -np 4 build/mpifort_9EFDD7F85F6D9FF8/app/Mandelbrot 
+ Rank            3  has          750  rows. From        2251 to        3000
+ Rank            2  has          750  rows. From        1501 to        2250
+ Rank            1  has          750  rows. From         751 to        1500
+[0](13:53:53) Starting Mandelbrot set calculation; Splitting arrays...
+ Rank            0  has          750  rows. From           1 to         750
+[0](13:53:53) Begin calculation...
+[0](13:53:53) Combining results...
+[2](13:53:53) Progress: 10%
+[2](13:53:53) Progress: 20%
+[2](13:53:53) Progress: 30%
+[2](13:53:53) Progress: 40%
+[2](13:53:53) Progress: 50%
+[2](13:53:53) Progress: 60%
+[2](13:53:53) Progress: 70%
+[2](13:53:53) Progress: 80%
+[2](13:53:53) Progress: 90%
+[2](13:53:53) Progress: 100%
+[0](13:53:53) Saving results...
+(13:53:53) Starte Plot-Erstellung...
+(13:53:53) Lese Header und Daten...
+Traceback (most recent call last):
+  File "/home/bastian-koberg/Projects/Fortran/mandelbrot_calc/plot.py", line 17, in <module>
+    with open(fn, "rb") as f:
+         ~~~~^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'mandelbrot_output.bin'
+=== Build gestartet: Fr 26. Jun 13:54:05 CEST 2026 ===
+ <INFO> BUILD_NAME: build/mpifort
+ <INFO> COMPILER:  mpifort
+ <INFO> C COMPILER:  gcc
+ <INFO> CXX COMPILER: g++
+ <INFO> COMPILER OPTIONS:   -Wall -Wextra -fPIC -fmax-errors=1 -g -fcheck=bounds -fcheck=array-temps -fbacktrace -fcoarray=single -fPIC
+ <INFO> C COMPILER OPTIONS:  
+ <INFO> CXX COMPILER OPTIONS: 
+ <INFO> LINKER OPTIONS:  
+ <INFO> INCLUDE DIRECTORIES:  []
+[100%] Project compiled successfully.
+ + mpirun -np 4 build/mpifort_9EFDD7F85F6D9FF8/app/Mandelbrot 
+ Rank            1  has          750  rows. From         751 to        1500
+ Rank            2  has          750  rows. From        1501 to        2250
+ Rank            3  has          750  rows. From        2251 to        3000
+[0](13:54:06) Starting Mandelbrot set calculation; Splitting arrays...
+ Rank            0  has          750  rows. From           1 to         750
+[0](13:54:06) Begin calculation...
+[0](13:54:06) Combining results...
+[2](13:54:06) Progress: 10%
+[2](13:54:06) Progress: 20%
+[2](13:54:06) Progress: 30%
+[2](13:54:06) Progress: 40%
+[2](13:54:06) Progress: 50%
+[2](13:54:07) Progress: 60%
+[2](13:54:07) Progress: 70%
+[2](13:54:07) Progress: 80%
+[2](13:54:07) Progress: 90%
+[2](13:54:07) Progress: 100%
+[0](13:54:07) Saving results...
+(13:54:07) Starte Plot-Erstellung...
+(13:54:07) Lese Header und Daten...
+(13:54:07) Erstelle Bild mit Pixelreihen im Arbeitsspeicher 1001 von 3000 Pixelreihen insgesamt...
+(13:54:07) Progress 1001/3000 Pixelreihen verarbeitet...
+(13:54:07) Progress 2002/3000 Pixelreihen verarbeitet...
+(13:54:07) Progress 3000/3000 Pixelreihen verarbeitet...
+(13:54:07) Bild erstellt, speichere und lösche temporäre Daten...
+(13:54:07) Fertig: output/mandelbrot_150.png gespeichert und RAM freigegeben.
+=== Fertig: Fr 26. Jun 13:54:07 CEST 2026 ===
+gio: file:///home/bastian-koberg/Projects/Fortran/mandelbrot_calc/mandelbrot_150.png: Fehler beim Holen der Informationen für Datei »/home/bastian-koberg/Projects/Fortran/mandelbrot_calc/mandelbrot_150.png«: Datei oder Verzeichnis nicht gefunden
+=== Build gestartet: Fr 26. Jun 13:54:44 CEST 2026 ===
+ <INFO> BUILD_NAME: build/mpifort
+ <INFO> COMPILER:  mpifort
+ <INFO> C COMPILER:  gcc
+ <INFO> CXX COMPILER: g++
+ <INFO> COMPILER OPTIONS:   -Wall -Wextra -fPIC -fmax-errors=1 -g -fcheck=bounds -fcheck=array-temps -fbacktrace -fcoarray=single -fPIC
+ <INFO> C COMPILER OPTIONS:  
+ <INFO> CXX COMPILER OPTIONS: 
+ <INFO> LINKER OPTIONS:  
+ <INFO> INCLUDE DIRECTORIES:  []
+[100%] Project compiled successfully.
+ + mpirun -np 4 build/mpifort_9EFDD7F85F6D9FF8/app/Mandelbrot 
+ Rank            1  has          750  rows. From         751 to        1500
+ Rank            3  has          750  rows. From        2251 to        3000
+[0](13:54:45) Starting Mandelbrot set calculation; Splitting arrays...
+ Rank            0  has          750  rows. From           1 to         750
+[0](13:54:45) Begin calculation...
+ Rank            2  has          750  rows. From        1501 to        2250
+[0](13:54:45) Combining results...
+[2](13:54:45) Progress: 10%
+[2](13:54:45) Progress: 20%
+[2](13:54:45) Progress: 30%
+[2](13:54:45) Progress: 40%
+[2](13:54:45) Progress: 50%
+[2](13:54:45) Progress: 60%
+[2](13:54:45) Progress: 70%
+[2](13:54:45) Progress: 80%
+[2](13:54:45) Progress: 90%
+[2](13:54:45) Progress: 100%
+[0](13:54:45) Saving results...
+(13:54:45) Starte Plot-Erstellung...
+(13:54:45) Lese Header und Daten...
+(13:54:45) Erstelle Bild mit Pixelreihen im Arbeitsspeicher 1001 von 3000 Pixelreihen insgesamt...
+(13:54:45) Progress 1001/3000 Pixelreihen verarbeitet...
+(13:54:45) Progress 2002/3000 Pixelreihen verarbeitet...
+(13:54:45) Progress 3000/3000 Pixelreihen verarbeitet...
+(13:54:45) Bild erstellt, speichere und lösche temporäre Daten...
+(13:54:46) Fertig: output/mandelbrot_150.png gespeichert und RAM freigegeben.
+=== Fertig: Fr 26. Jun 13:54:46 CEST 2026 ===

@@ -1,0 +1,21 @@
+name = "Mandelbrot"
+version = "0.1.0"
+license = "license"
+author = "Bastian"
+maintainer = "b.koberg412@gmail.com"
+copyright = "Copyright 2026, Bastian"
+[build]
+auto-executables = true
+auto-tests = true
+auto-examples = true
+module-naming = false
+external-modules = ["mpi_f08"]
+[install]
+library = false
+test = false
+[fortran]
+implicit-typing = false
+implicit-external = false
+source-form = "free"
+[dependencies]
+json-fortran = { git = "https://github.com/jacobwilliams/json-fortran.git" }

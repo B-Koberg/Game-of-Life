@@ -1,0 +1,8 @@
+*.mod
+*.o
+*.bin
+*.txt
+*.logs
+.logs/
+__pycache__/
+*.pyc
