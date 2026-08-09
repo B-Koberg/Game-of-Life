@@ -2,7 +2,7 @@ program GOL
     use mpi_f08
     use parameters
     use mpi_utils, only: split_arrays
-    use GOL, only: initialize_board, exchange_halos, step_generation, swap_boards
+    use gol_utils, only: initialize_board, exchange_halos, step_generation, swap_boards
     implicit none
 
     integer :: rank, size
@@ -42,14 +42,14 @@ program GOL
     call MPI_Finalize()
 
 contains
-    subroutine print_time(rank, message)
-        integer, intent(in) :: rank
+    subroutine print_time(proc_rank, message)
+        integer, intent(in) :: proc_rank
         character(len=*), intent(in) :: message
         integer :: time(8)
 
         call date_and_time(values=time)
         write(*,'("[",I1.1,"](",I2.2,":",I2.2,":",I2.2,") ",A)') &
-            rank, time(5), time(6), time(7), message
+            proc_rank, time(5), time(6), time(7), message
     end subroutine print_time
 
 

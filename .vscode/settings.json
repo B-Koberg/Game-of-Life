@@ -1,0 +1,7 @@
+{
+    "fortran.fortls.path": "/home/bastian-koberg/Schreibtisch/Uni/.venv/bin/fortls", 
+    "fortran.linter.compilerPath": "/usr/bin/mpifort",
+    "fortran.linter.includePaths": ["${workspaceFolder}/build/**"],
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000
+}

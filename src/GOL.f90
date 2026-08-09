@@ -1,118 +1,119 @@
-module GOL
-	use mpi_f08
-	use parameters, only: nx, ny
-	implicit none
-	private
+module gol_utils
+    use mpi_f08
+    use parameters, only: nx, ny
+    implicit none
+    private
 
-	public :: initialize_board
-	public :: exchange_halos
-	public :: step_generation
-	public :: swap_boards
+    public :: initialize_board
+    public :: exchange_halos
+    public :: step_generation
+    public :: swap_boards
 
 contains
-	subroutine initialize_board(board_local, local_ny, rank)
-		integer, intent(in) :: local_ny, rank
-		integer, intent(inout) :: board_local(nx, 0:local_ny+1)
 
-		integer :: x, y
+    subroutine initialize_board(board_local, local_ny, rank)
+        integer, intent(in) :: local_ny, rank
+        integer, intent(inout) :: board_local(nx, 0:local_ny+1)
 
-		board_local = 0
+        integer :: x, y
 
-		do y = 1, local_ny
-			do x = 1, nx
-				if (mod(x * 37 + (y + rank * local_ny) * 17, 23) == 0) then
-					board_local(x, y) = 1
-				end if
-			end do
-		end do
-	end subroutine initialize_board
+        board_local = 0
 
-	subroutine exchange_halos(board_local, local_ny, rank, size)
-		integer, intent(in) :: local_ny, rank, size
-		integer, intent(inout) :: board_local(nx, 0:local_ny+1)
+        do y = 1, local_ny
+            do x = 1, nx
+                if (mod(x * 37 + (y + rank * local_ny) * 17, 23) == 0) then
+                    board_local(x, y) = 1
+                end if
+            end do
+        end do
+    end subroutine initialize_board
 
-		integer :: ierr
-		type(MPI_Status) :: status
-		integer :: upper_rank, lower_rank
+    subroutine exchange_halos(board_local, local_ny, rank, size)
+        integer, intent(in) :: local_ny, rank, size
+        integer, intent(inout) :: board_local(nx, 0:local_ny+1)
 
-		upper_rank = rank - 1
-		lower_rank = rank + 1
+        integer :: ierr
+        type(MPI_Status) :: status
+        integer :: upper_rank, lower_rank
 
-		if (upper_rank < 0) upper_rank = MPI_PROC_NULL
-		if (lower_rank >= size) lower_rank = MPI_PROC_NULL
+        upper_rank = rank - 1
+        lower_rank = rank + 1
 
-		call MPI_Sendrecv( &
-			board_local(:, 1), nx, MPI_INTEGER, upper_rank, 1, &
-			board_local(:, 0), nx, MPI_INTEGER, upper_rank, 2, &
-			MPI_COMM_WORLD, status, ierr)
+        if (upper_rank < 0) upper_rank = MPI_PROC_NULL
+        if (lower_rank >= size) lower_rank = MPI_PROC_NULL
 
-		call MPI_Sendrecv( &
-			board_local(:, local_ny), nx, MPI_INTEGER, lower_rank, 2, &
-			board_local(:, local_ny + 1), nx, MPI_INTEGER, lower_rank, 1, &
-			MPI_COMM_WORLD, status, ierr)
-	end subroutine exchange_halos
+        call MPI_Sendrecv( &
+            board_local(:, 1), nx, MPI_INTEGER, upper_rank, 1, &
+            board_local(:, 0), nx, MPI_INTEGER, upper_rank, 2, &
+            MPI_COMM_WORLD, status, ierr)
 
-	subroutine step_generation(current, next, local_ny)
-		integer, intent(in) :: local_ny
-		integer, intent(in) :: current(nx, 0:local_ny+1)
-		integer, intent(out) :: next(nx, 0:local_ny+1)
+        call MPI_Sendrecv( &
+            board_local(:, local_ny), nx, MPI_INTEGER, lower_rank, 2, &
+            board_local(:, local_ny + 1), nx, MPI_INTEGER, lower_rank, 1, &
+            MPI_COMM_WORLD, status, ierr)
+    end subroutine exchange_halos
 
-		integer :: x, y, neighbors
+    subroutine step_generation(current, next, local_ny)
+        integer, intent(in) :: local_ny
+        integer, intent(in) :: current(nx, 0:local_ny+1)
+        integer, intent(out) :: next(nx, 0:local_ny+1)
 
-		next = 0
+        integer :: x, y, neighbors
 
-		do y = 1, local_ny
-			do x = 1, nx
-				neighbors = count_neighbors(current, x, y, local_ny)
+        next = 0
 
-				if (current(x, y) == 1) then
-					if (neighbors == 2 .or. neighbors == 3) next(x, y) = 1
-				else
-					if (neighbors == 3) next(x, y) = 1
-				end if
-			end do
-		end do
-	end subroutine step_generation
+        do y = 1, local_ny
+            do x = 1, nx
+                neighbors = count_neighbors(current, x, y, local_ny)
 
-	subroutine swap_boards(current, next, local_ny)
-		integer, intent(in) :: local_ny
-		integer, intent(inout) :: current(nx, 0:local_ny+1)
-		integer, intent(inout) :: next(nx, 0:local_ny+1)
+                if (current(x, y) == 1) then
+                    if (neighbors == 2 .or. neighbors == 3) next(x, y) = 1
+                else
+                    if (neighbors == 3) next(x, y) = 1
+                end if
+            end do
+        end do
+    end subroutine step_generation
 
-		integer :: tmp(nx, 0:local_ny+1)
+    subroutine swap_boards(current, next, local_ny)
+        integer, intent(in) :: local_ny
+        integer, intent(inout) :: current(nx, 0:local_ny+1)
+        integer, intent(inout) :: next(nx, 0:local_ny+1)
 
-		tmp = current
-		current = next
-		next = tmp
-	end subroutine swap_boards
+        integer :: tmp(nx, 0:local_ny+1)
 
-	integer function count_neighbors(board_local, x, y, local_ny) result(neighbors)
-		integer, intent(in) :: local_ny, x, y
-		integer, intent(in) :: board_local(nx, 0:local_ny+1)
+        tmp = current
+        current = next
+        next = tmp
+    end subroutine swap_boards
 
-		integer :: left_x, right_x
+    integer function count_neighbors(board_local, x, y, local_ny) result(neighbors)
+        integer, intent(in) :: local_ny, x, y
+        integer, intent(in) :: board_local(nx, 0:local_ny+1)
 
-		if (x == 1) then
-			left_x = nx
-		else
-			left_x = x - 1
-		end if
+        integer :: left_x, right_x
 
-		if (x == nx) then
-			right_x = 1
-		else
-			right_x = x + 1
-		end if
+        if (x == 1) then
+            left_x = nx
+        else
+            left_x = x - 1
+        end if
 
-		neighbors = 0
-		neighbors = neighbors + board_local(left_x, y - 1)
-		neighbors = neighbors + board_local(x, y - 1)
-		neighbors = neighbors + board_local(right_x, y - 1)
-		neighbors = neighbors + board_local(left_x, y)
-		neighbors = neighbors + board_local(right_x, y)
-		neighbors = neighbors + board_local(left_x, y + 1)
-		neighbors = neighbors + board_local(x, y + 1)
-		neighbors = neighbors + board_local(right_x, y + 1)
-	end function count_neighbors
+        if (x == nx) then
+            right_x = 1
+        else
+            right_x = x + 1
+        end if
 
-end module GOL
+        neighbors = 0
+        neighbors = neighbors + board_local(left_x, y - 1)
+        neighbors = neighbors + board_local(x, y - 1)
+        neighbors = neighbors + board_local(right_x, y - 1)
+        neighbors = neighbors + board_local(left_x, y)
+        neighbors = neighbors + board_local(right_x, y)
+        neighbors = neighbors + board_local(left_x, y + 1)
+        neighbors = neighbors + board_local(x, y + 1)
+        neighbors = neighbors + board_local(right_x, y + 1)
+    end function count_neighbors
+
+end module gol_utils
