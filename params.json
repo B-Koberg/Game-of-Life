@@ -4,6 +4,5 @@
     "ratio_y":1,
     "base_size":100,
     "frames":100,
-    "delta_frames":1,
-    "output_png":"output/mandelbrot.mp4"
+    "delta_frames":1
 }

@@ -40,10 +40,6 @@ printf "=== Berechnung fertig: %s, Dauer: %02d:%02d:%02d.%03d ===\n" \
     "$(date '+%Y-%m-%d %H:%M:%S')" \
     "$hours" "$mins" "$secs" "$msecs"
 
-python3 -u main.py
-
-xdg-open output/mandelbrot.png &
-
 # Gesamtzeit
 END_MS=$(($(date +%s%N)/1000000))
 TOTAL_MS=$((END_MS - START_MS))

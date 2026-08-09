@@ -1,5 +1,5 @@
-# Mandelbrot Berechnung mit Fortran
-Mit MPI und/oder OpenMP
+# Game of Life mit Fortran
+Mit MPI
 
 ## 📋 Inhaltsverzeichnis
 - [Features](#-features)
@@ -19,14 +19,13 @@ Mit MPI und/oder OpenMP
 
 ## 📦 Voraussetzungen
 - **Compiler:** gfortran 15.2
-- **MPI-Implementation:** OpenMP 4.5
-- **Build-System:** Make currently (future fmp und bash)
-- **Libraries:** python: numpy, pillow, matplotlib, gc, os, time
+- **MPI-Implementation:** OpenMPI
+- **Build-System:** fpm und bash
 
 ## 🛠 Installation & Build
-### CMake (Empfohlen)
 ```bash
-git clone https://github.com/B-Koberg/Mandelbrot.git
-cd Mandelbrot
-git switch feature/openmp oder git switch feature/mpi
-make
+git clone https://github.com/B-Koberg/gol.git
+cd gol
+git switch wip/mpi
+./run.sh
+```
