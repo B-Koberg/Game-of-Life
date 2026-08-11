@@ -3,74 +3,49 @@ module mpi_utils
     use parameters
     implicit none
     private
-    public :: split_arrays, gather_2d
+    public :: split_arrays, exchange_halos
 contains
-    subroutine split_arrays(y_pix, y_pix_local, local_ny, rank, size)
+    subroutine split_arrays(local_ny, rank, size)
         integer, intent(in) :: rank, size
-        integer, intent(in) :: y_pix(ny)
-        integer, intent(out), allocatable :: y_pix_local(:)
         integer, intent(out) :: local_ny
 
-        integer :: starty, endy
+        integer :: start_y, end_y
         integer :: block
 
         block = ny / size
-        starty = rank*block + 1
-        endy   = (rank+1)*block
-        if (rank == size-1) endy = ny
+        start_y = rank*block + 1
+        end_y   = (rank+1)*block
+        if (rank == size-1) end_y = ny
 
-        if (starty > endy) then
+        if (start_y > end_y) then
             stop "Error: More processes than work items"
         else
-            local_ny = endy - starty + 1
+            local_ny = end_y - start_y + 1
         end if
-
-        allocate(y_pix_local(local_ny))
-        y_pix_local = y_pix(starty:endy)
     end subroutine split_arrays
 
-    subroutine gather_2d(iter_array, iter_array_local, local_ny, size)
-        integer, intent(in) :: local_ny, size
-        integer, intent(in) :: iter_array_local(nx, local_ny)
-        integer, intent(out) :: iter_array(nx, ny)
-        integer, allocatable :: recvcounts(:), displs(:)
+    subroutine exchange_halos(board_local, local_ny, rank, size)
+        integer, intent(in) :: local_ny, rank, size
+        integer, intent(inout) :: board_local(nx, 0:local_ny+1)
 
-        integer :: p, tmp_start, tmp_end, block
+        integer :: ierr
+        type(MPI_Status) :: status
+        integer :: upper_rank, lower_rank
 
-        block = ny / size
+        upper_rank = rank - 1
+        lower_rank = rank + 1
 
-        allocate(recvcounts(size), displs(size))
+        if (upper_rank < 0) upper_rank = MPI_PROC_NULL
+        if (lower_rank >= size) lower_rank = MPI_PROC_NULL
 
-        do p = 0, size-1
-            tmp_start = p*block + 1
-            tmp_end   = (p+1)*block
-            if (p == size-1) tmp_end = ny
+        call MPI_Sendrecv( &
+            board_local(:, 1), nx, MPI_INTEGER, upper_rank, 1, &
+            board_local(:, 0), nx, MPI_INTEGER, upper_rank, 2, &
+            MPI_COMM_WORLD, status, ierr)
 
-            recvcounts(p+1) = (tmp_end - tmp_start + 1) * nx
-        end do
-
-        displs(1) = 0
-        do p = 2, size
-            displs(p) = displs(p-1) + recvcounts(p-1)
-        end do
-
-
-        call MPI_Gatherv( &
-            iter_array_local, nx*local_ny, MPI_INTEGER, &
-            iter_array, recvcounts, displs, MPI_INTEGER, &
-            0, MPI_COMM_WORLD)
-
-        !MPI_Gatherv(
-        !Was sende ich?,
-        !Wie viele Elemente sende ich?,
-        !Welcher Datentyp?,
-        !Wohin wird gesammelt?,
-        !Wie viel kommt von jedem Rank?,
-        !Wo wird jedes Paket abgelegt?,
-        !Welcher Datentyp wird empfangen?,
-        !Wer sammelt?,
-        !In welchem Communicator?
-        !)
-    end subroutine
-
+        call MPI_Sendrecv( &
+            board_local(:, local_ny), nx, MPI_INTEGER, lower_rank, 2, &
+            board_local(:, local_ny + 1), nx, MPI_INTEGER, lower_rank, 1, &
+            MPI_COMM_WORLD, status, ierr)
+    end subroutine exchange_halos
 end module mpi_utils

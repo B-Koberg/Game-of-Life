@@ -16,6 +16,8 @@ rm -f output/*.bin
 # Startzeit in Millisekunden
 START_MS=$(($(date +%s%N)/1000000))
 
+fpm build 
+
 # Alle folgenden Ausgaben in die Logdatei schreiben und gleichzeitig auf der Konsole anzeigen
 exec > >(tee -a "$LOGPATH") 2>&1
 
@@ -25,7 +27,8 @@ echo "=== Build gestartet: $(date '+%Y-%m-%d %H:%M:%S') ==="
 fpm build -V
 
 # Run mit mpirun
-fpm run --runner "mpirun -np 4"
+# Nur lokale MPI-Transporte nutzen, damit OpenMPI nicht auf TCP-Interfaces ausweicht.
+fpm run --runner "mpirun --mca btl self,vader -np 4"
 
 # Zeit nach der Berechnung
 MID_MS=$(($(date +%s%N)/1000000))
