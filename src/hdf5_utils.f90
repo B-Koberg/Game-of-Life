@@ -5,13 +5,12 @@ module hdf5_utils
   public :: hdf5_init_run, hdf5_write_frame, hdf5_close_run
 contains
 
-  subroutine hdf5_init_run(fname, file_id, dset_id, filespace_id, memspace_id)
-    character(len=*), intent(in) :: fname
+  subroutine hdf5_init_run(file_id, dset_id, filespace_id, memspace_id)
     integer(HID_T), intent(out) :: file_id, dset_id, filespace_id, memspace_id
     integer(HSIZE_T), dimension(3) :: dims, memdims
     integer :: h5err
 
-    dims(1) = frames + 1
+    dims(1) = 1 + ceiling(real(frames)/real(delta_frames))
     dims(2) = nx
     dims(3) = ny
 
@@ -23,7 +22,7 @@ contains
     if (h5err /= 0) stop "h5open_f failed"
 
     ! Erstelle Datei mit file_id und filename fname
-    call h5fcreate_f(trim(fname), H5F_ACC_TRUNC_F, file_id, h5err)
+    call h5fcreate_f(trim(output_file), H5F_ACC_TRUNC_F, file_id, h5err)
     ! Erstelle Dataspace in der Datei (alle Frames der Simulation)
     call h5screate_simple_f(3, dims, filespace_id, h5err)
     ! Erstelle Dataset "frames" in der Datei, das den Dataspace nutzt

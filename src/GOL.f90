@@ -1,6 +1,6 @@
 module gol_utils
     use mpi_f08
-    use parameters, only: nx, ny
+    use parameters
     implicit none
     private
 
@@ -65,27 +65,41 @@ contains
 
         integer :: left_x, right_x
 
-        if (x == 1) then
-            left_x = nx
+        if (periodicity) then
+            ! Periodisch: x-Rand wrappt
+            if (x == 1) then
+                left_x = nx
+            else
+                left_x = x - 1
+            end if
+
+            if (x == nx) then
+                right_x = 1
+            else
+                right_x = x + 1
+            end if
         else
             left_x = x - 1
-        end if
-
-        if (x == nx) then
-            right_x = 1
-        else
             right_x = x + 1
         end if
 
+        ! y-Nachbarn kommen aus den Halo-Spalten (0 und local_ny+1),
+        ! die immer im Board sind -> kein Guard noetig
         neighbors = 0
-        neighbors = neighbors + board_local(left_x, y - 1)
         neighbors = neighbors + board_local(x, y - 1)
-        neighbors = neighbors + board_local(right_x, y - 1)
-        neighbors = neighbors + board_local(left_x, y)
-        neighbors = neighbors + board_local(right_x, y)
-        neighbors = neighbors + board_local(left_x, y + 1)
         neighbors = neighbors + board_local(x, y + 1)
-        neighbors = neighbors + board_local(right_x, y + 1)
+
+        if (periodicity .or. x > 1) then
+            neighbors = neighbors + board_local(left_x, y - 1)
+            neighbors = neighbors + board_local(left_x, y)
+            neighbors = neighbors + board_local(left_x, y + 1)
+        end if
+
+        if (periodicity .or. x < nx) then
+            neighbors = neighbors + board_local(right_x, y - 1)
+            neighbors = neighbors + board_local(right_x, y)
+            neighbors = neighbors + board_local(right_x, y + 1)
+        end if
     end function count_neighbors
 
 end module gol_utils

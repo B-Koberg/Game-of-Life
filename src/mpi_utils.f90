@@ -40,16 +40,22 @@ contains
         upper_rank = rank - 1
         lower_rank = rank + 1
 
-        if (upper_rank < 0) upper_rank = size - 1
-        if (lower_rank >= size) lower_rank = 0
+        if (periodicity) then
+            if (upper_rank < 0) upper_rank = size - 1
+            if (lower_rank >= size) lower_rank = 0
+        else
+            ! Tote Wand in y: Rand-Ranks haben keinen Nachbarn,
+            ! ihre Halos bleiben 0
+            if (upper_rank < 0) upper_rank = MPI_PROC_NULL
+            if (lower_rank >= size) lower_rank = MPI_PROC_NULL
+        end if
 
-        ! Send last real row downward, receive upper halo from upper neighbor
         call MPI_Sendrecv( &
             board_local(:, local_ny), nx, MPI_INTEGER, lower_rank, 1, &
             board_local(:, 0), nx, MPI_INTEGER, upper_rank, 1, &
             MPI_COMM_WORLD, status, ierr)
 
-        ! Send first real row upward, receive lower halo from lower neighbor
+            
         call MPI_Sendrecv( &
             board_local(:, 1), nx, MPI_INTEGER, upper_rank, 2, &
             board_local(:, local_ny + 1), nx, MPI_INTEGER, lower_rank, 2, &

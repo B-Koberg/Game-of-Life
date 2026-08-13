@@ -28,7 +28,7 @@ fpm build -V
 
 # Run mit mpirun
 # Nur lokale MPI-Transporte nutzen, damit OpenMPI nicht auf TCP-Interfaces ausweicht.
-fpm run --runner "mpirun --mca btl self,vader -np 4"
+fpm run --runner "mpirun --mca btl self,vader -np 8 "
 
 # Zeit nach der Berechnung
 MID_MS=$(($(date +%s%N)/1000000))

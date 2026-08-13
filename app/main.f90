@@ -9,6 +9,7 @@ program GOL
 
     integer :: rank, size
     integer :: frame
+    integer :: saved
 
     integer :: local_ny
 
@@ -34,10 +35,11 @@ program GOL
     board_next = 0
 
 
-    if (rank == 0) call hdf5_init_run("output/frames.hdf5", file_id, dset_id, filespace_id, memspace_id)
+    if (rank == 0) call hdf5_init_run( file_id, dset_id, filespace_id, memspace_id)
 
-
-    call gather_and_save(board_current, local_ny, rank, size, 1, dset_id, filespace_id, memspace_id)
+    ! für das richtige speichern der frames mit delta frames
+    saved = 1
+    call gather_and_save(board_current, local_ny, rank, size, saved, dset_id, filespace_id, memspace_id)
 
     call print_time(rank, "Begin calculation...")
 
@@ -46,14 +48,17 @@ program GOL
         call step_generation(board_current, board_next, local_ny)
         call swap_boards(board_current, board_next, local_ny)
 
-        call gather_and_save(board_current, local_ny, rank, size, frame, dset_id, filespace_id, memspace_id)
+        if (mod(frame, delta_frames) == 0) then
+            saved = saved + 1
+            call gather_and_save(board_current, local_ny, rank, size, saved, dset_id, filespace_id, memspace_id)
+        end if
     end do
 
     if (rank == 0) call hdf5_close_run(file_id, dset_id, filespace_id, memspace_id)
 
     if (rank == 0) call print_time(rank, "Finished Game-of-Life frame calculation")
 
-    
+
     call MPI_Finalize()
 
 contains

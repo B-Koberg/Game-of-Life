@@ -4,16 +4,19 @@ module parameters
     use json_module
     implicit none
     public :: wp
-    public :: nx, ny, frames, delta_frames
+    public :: nx, ny, frames, delta_frames, periodicity, output_file
 
     integer :: wp = real64
 
     real :: ratio_x, ratio_y 
     real :: base_size 
-    integer :: frames, delta_frames
-    
     integer :: nx, ny
 
+    integer :: frames, delta_frames
+
+    logical :: periodicity
+
+    character(len=:), allocatable :: output_file
 contains
     subroutine load_parameters(file)
         character(len=*), intent(in) :: file
@@ -24,7 +27,8 @@ contains
 
         call json%initialize()
 
-        call json%load_file(file); if (json%failed()) stop 'Failed to load JSON file'
+        call json%load_file(file)
+        if (json%failed()) stop 'Failed to load JSON file'
 
         json_block: block
             call json%get('wp', wp_string, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load wp from JSON file')
@@ -33,9 +37,11 @@ contains
             call json%get('base_size', base_size, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load base_size from JSON file')
             call json%get('frames', frames, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load frames from JSON file')
             call json%get('delta_frames', delta_frames, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load delta_frames from JSON file')
+            call json%get('periodicity', periodicity, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load periodicity from JSON file')
+            call json%get('output_file', output_file, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load output_file from JSON file')
         end block json_block
 
-        select case (trim(adjustl(wp_string)))
+        select case (wp_string)
             case ('real64')
                 wp = real64
             case ('real32')
