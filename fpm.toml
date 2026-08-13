@@ -9,7 +9,8 @@ auto-executables = true
 auto-tests = true
 auto-examples = true
 module-naming = false
-external-modules = ["mpi_f08"]
+external-modules = ["mpi_f08", "hdf5"]
+link = ["hdf5hl_fortran", "hdf5_fortran", "hdf5_hl", "hdf5"]
 [install]
 library = false
 test = false
@@ -19,3 +20,4 @@ implicit-external = false
 source-form = "free"
 [dependencies]
 json-fortran = { git = "https://github.com/jacobwilliams/json-fortran.git" }
+hdf5 = "*"

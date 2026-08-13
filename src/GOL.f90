@@ -17,7 +17,7 @@ contains
 
         do y = 1, local_ny
             do x = 1, nx
-                if (mod(x * 37 + (y + rank * local_ny) * 17, 23) == 0) then
+                if (mod(x,10) == 0) then
                     board_local(x, y) = 1
                 end if
                 !random board, später geziehlter 

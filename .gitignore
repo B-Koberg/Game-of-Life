@@ -3,6 +3,6 @@
 *.bin
 *.txt
 *.logs
-.logs/
+output/
 __pycache__/
 *.pyc
