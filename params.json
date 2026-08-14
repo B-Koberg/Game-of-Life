@@ -2,10 +2,11 @@
     "wp":"real64",
     "ratio_x":1,
     "ratio_y":1,
-    "base_size":109,
-    "frames":100,
+    "base_size":509,
+    "frames":500,
     "delta_frames":1,
     "periodicity":false,
     "output_file":"output/frames.hdf5",
-    "output_video":"output/frames.mp4"
+    "output_video":"output/frames.mp4",
+    "video_height":1500
 }

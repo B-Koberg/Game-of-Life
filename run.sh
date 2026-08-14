@@ -10,9 +10,6 @@ LOGDIR="output/.logs"
 mkdir -p "$LOGDIR"
 LOGPATH="${LOGDIR}/${LOGFILE}"
 
-# Lösche alte Binärdateien
-rm -f output/*.bin
-
 # Startzeit in Millisekunden
 START_MS=$(($(date +%s%N)/1000000))
 
@@ -43,6 +40,8 @@ printf "=== Berechnung fertig: %s, Dauer: %02d:%02d:%02d.%03d ===\n" \
     "$(date '+%Y-%m-%d %H:%M:%S')" \
     "$hours" "$mins" "$secs" "$msecs"
 
+python3 make_video.py
+
 # Gesamtzeit
 END_MS=$(($(date +%s%N)/1000000))
 TOTAL_MS=$((END_MS - START_MS))
@@ -55,6 +54,8 @@ msecs=$((TOTAL_MS % 1000))
 printf "=== Komplett fertig: %s, Dauer: %02d:%02d:%02d.%03d ===\n" \
     "$(date '+%Y-%m-%d %H:%M:%S')" \
     "$hours" "$mins" "$secs" "$msecs"
+
+open output/frames.mp4
 
 # Symlink auf die aktuelle Logdatei
 ln -sf "$(realpath "$LOGPATH")" "${LOGDIR}/build.log"
