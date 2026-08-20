@@ -4,7 +4,10 @@ module parameters
     use json_module
     implicit none
     public :: wp
-    public :: nx, ny, frames, delta_frames, periodicity, output_file
+    public :: nx, ny
+    public :: frames, delta_frames
+    public :: periodicity, preset
+    public :: output_file
 
     integer :: wp = real64
 
@@ -15,13 +18,13 @@ module parameters
     integer :: frames, delta_frames
 
     logical :: periodicity
+    character(len=:), allocatable :: preset
 
     character(len=:), allocatable :: output_file
 contains
     subroutine load_parameters(file)
         character(len=*), intent(in) :: file
         logical :: is_found
-        integer :: time(8)
         type(json_file) :: json
         character(len=:), allocatable :: wp_string
 
@@ -38,6 +41,7 @@ contains
             call json%get('frames', frames, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load frames from JSON file')
             call json%get('delta_frames', delta_frames, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load delta_frames from JSON file')
             call json%get('periodicity', periodicity, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load periodicity from JSON file')
+            call json%get('preset', preset, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load preset from JSON file')
             call json%get('output_file', output_file, is_found); if (.not. is_found) call MPI_exit_with_error('Failed to load output_file from JSON file')
         end block json_block
 
@@ -47,7 +51,6 @@ contains
             case ('real32')
                 wp = real32
             case default
-                is_found = .false.
                 call MPI_exit_with_error('Error: Invalid wp in JSON. Expected real64 or real32.')
         end select
 
@@ -58,14 +61,11 @@ contains
             call MPI_exit_with_error('Error: delta_frames must be an integer value.')
         end if
 
-        if(is_found) then
-            nx = ratio_x * base_size
-            ny = ratio_y * base_size
+        preset = trim(preset)
+        
+        nx = ratio_x * base_size
+        ny = ratio_y * base_size    
 
-            call date_and_time(values=time)
-            write(*,'("(",I2.2,":",I2.2,":",I2.2,") Found Json File and loaded all Parameters")') &
-                time(5), time(6), time(7)        
-        end if
 
         call json%destroy()
     end subroutine load_parameters

@@ -13,16 +13,31 @@ contains
 
         integer :: x, y
 
-        board_local = 0
+        real :: r
 
-        do y = 1, local_ny
-            do x = 1, nx
-                if (mod(x,10) == 0) then
-                    board_local(x, y) = 1
-                end if
-                !random board, später geziehlter 
-            end do
-        end do
+        board_local = 0
+        
+        select case (preset)
+            case ('verticle_lines')
+                do y = 1, local_ny
+                    do x = 1, nx
+                        if (mod(x,10) == 0) then
+                            board_local(x, y) = 1
+                        end if
+                    end do
+                end do
+            case ('random')
+                do y = 1, local_ny
+                    do x = 1, nx
+                        call random_number(r)
+                        if (r < 0.5) then
+                            board_local(x, y) = 1
+                        end if
+                    end do
+                end do
+            case default
+                call MPI_exit_with_error('Error: Invalid preset in JSON. Expected verticle_lines or random.')
+        end select
     end subroutine initialize_board
 
     subroutine step_generation(board_current, board_next, local_ny)
