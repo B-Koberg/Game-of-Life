@@ -11,7 +11,7 @@ with open("params.json", "r") as f:
 for name, value in params.items():
     globals()[name] = value
 
-fps = max(1, round(frames / 20))
+fps = max(1, round(frames / (20 * delta_frames)))
 width = round(video_height * ratio_x / ratio_y)
 
 with h5py.File(output_file, "r") as f:

@@ -4,7 +4,7 @@
     "ratio_y":1,
     "base_size":509,
     "frames":100,
-    "delta_frames":1,
+    "delta_frames":3,
     "periodicity":false,
     "preset":"verticle_lines",
     "output_file":"output/frames.hdf5",

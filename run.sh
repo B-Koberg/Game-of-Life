@@ -24,7 +24,7 @@ fpm build -V
 
 # Run mit mpirun
 # Nur lokale MPI-Transporte nutzen, damit OpenMPI nicht auf TCP-Interfaces ausweicht.
-fpm run --runner "mpirun --mca btl self,vader -np 4 "
+fpm run --runner "mpirun --mca btl self,vader -np 1 "
 
 # Zeit nach der Berechnung
 MID_MS=$(($(date +%s%N)/1000000))
@@ -54,7 +54,7 @@ printf "=== Komplett fertig: %s, Dauer: %02d:%02d:%02d.%03d ===\n" \
     "$(date '+%Y-%m-%d %H:%M:%S')" \
     "$hours" "$mins" "$secs" "$msecs"
 
-open output/frames.mp4
+xdg-open output/frames.mp4
 
 # Symlink auf die aktuelle Logdatei
 ln -sf "$(realpath "$LOGPATH")" "${LOGDIR}/build.log"
