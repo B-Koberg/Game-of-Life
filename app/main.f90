@@ -25,9 +25,8 @@ program GOL
     call MPI_Comm_rank(MPI_COMM_WORLD, rank)
     call MPI_Comm_size(MPI_COMM_WORLD, size)
 
-    
     call load_parameters('params.json')
-    if (rank == 0) call print_time(rank, "Loaded parameters from params.json")
+    if (rank == 0) call print_time(rank, "Prozessparameter aus params.json geladen.")
 
     call split_arrays(local_ny, rank, size)
 
@@ -43,7 +42,7 @@ program GOL
     saved = 1
     call gather_and_save(board_current, local_ny, rank, size, saved, dset_id, filespace_id, memspace_id)
 
-    if (rank == 0) call print_time(rank, "Begin calculation...")
+    if (rank == 0) call print_time(rank, "Berechnung gestartet...")
 
     perc = 0.0
     do frame = 2, frames + 1
@@ -58,17 +57,17 @@ program GOL
         
         perc = real(frame) / real(frames+1) * 100.0
         if (rank == 0 .and. mod(int(perc), 10) == 0) then
-            call print_time(rank, "Progress: "//trim(itoa(int(perc)))//"%")
+            call print_time(rank, "Fortschritt: "//trim(itoa(int(perc)))//"%")
         end if
     end do
 
-    if (rank == 0) call print_time(rank, "Finished Game-of-Life frame calculation")
+    if (rank == 0) call print_time(rank, "Game-of-Life Frame-Berechnung abgeschlossen")
 
     if (rank == 0) call hdf5_close_run(file_id, dset_id, filespace_id, memspace_id)
 
     call MPI_Finalize()
 
-    if (rank == 0) call print_time(rank, "Finished Game-of-Life simulation. Exiting...")
+    if (rank == 0) call print_time(rank, "Game-of-Life Simulation abgeschlossen. Beende...")
 
 contains
     subroutine print_time(proc_rank, message)

@@ -1,24 +1,27 @@
-# Game of Life mit Fortran
-Parallelisierte Simulation mit MPI und HDF5-Ausgabe.
+# Game of Life in Fortran und MPI-Parallelisierung
 
 ## Features
 - MPI-basierte Parallelisierung (Slab-Decomposition entlang der Y-Achse)
 - HDF5-Frame-Speicherung
-- Video-Generierung via ffmpeg (Python)
 - Konfigurierbare Parameter über `params.json`
+- Logfiles in output/.logs
 
 ## Voraussetzungen
-- **Compiler:** gfortran (>= 10)
+- **Compiler:** gfortran (programmed in 15.2.0)
 - **MPI-Implementation:** OpenMPI
-- **HDF5** (mit Fortran-Bindings, z.B. `libhdf5-dev` / `hdf5-devel`)
-- **Build-System:** [fpm](https://fpm.fortran-lang.org/)
-- **Python:** h5py, numpy (für Video-Erzeugung)
-- **ffmpeg**
+- **HDF5** (mit Fortran-Bindings)
+- **Build-System:** Fortran Project Mangager (fpm)
+### Python
+- h5py, numpy, ffmpeg
 
 ## Installation & Build
 ```bash
 git clone https://github.com/B-Koberg/gol.git
+
 cd gol
+
+git checkout mpi
+
 ./run.sh
 ```
 
@@ -58,5 +61,10 @@ gol/
 - **FPS**: Die FPS des Videos sind so programmiert, dass das video immer ca. 20 Sekunden lang ist oder 1 FPS angenommen wird.
 - **Ohne Build ausführen**: Falls nur Parameter in der JSON-Datei geändert wurde, reicht es die Datei nochmal auszuführen ohne das Projekt komplett zu compelieren:
 ```
-./build/mpifort_*/app/GOL && python3 make_video.py && xdg-open ./output/[output_video in params.json]
+mpirun --mca btl self,vader -np 4 build/mpifort_*/app/GOL 
+
+python3 make_video.py 
+
+xdg-open ./output/[output_video in params.json]
 ```
+- **Letzen log ansehen**: Es existiert ein virtual link in output/.logs/build.log der den letzten log linked.
