@@ -2,7 +2,7 @@ module hdf5_utils
   use hdf5
   use parameters
   implicit none
-  public :: hdf5_init_run, hdf5_write_frame, hdf5_close_run
+  public :: hdf5_init_run, hdf5_write_frame, hdf5_close_run, save_frame
 contains
 
   subroutine hdf5_init_run(file_id, dset_id, filespace_id, memspace_id)
@@ -32,10 +32,10 @@ contains
   end subroutine hdf5_init_run
 
 
-  subroutine hdf5_write_frame(dset_id, filespace_id, memspace_id, frame_index, global)
+  subroutine hdf5_write_frame(dset_id, filespace_id, memspace_id, frame_index, board)
     integer(HID_T), intent(in) :: dset_id, filespace_id, memspace_id
     integer, intent(in) :: frame_index        
-    integer, intent(in) :: global(nx, ny)
+    integer, intent(in) :: board(nx, ny)
     integer(HSIZE_T), dimension(3) :: start, count, memdims
     integer :: h5err
 
@@ -53,11 +53,20 @@ contains
 
     ! Selectiere eine Hyperslab (ein Frame) in der Datei-Dataspace, start gibt position, count dimensions
     call h5sselect_hyperslab_f(filespace_id, H5S_SELECT_SET_F, start, count, h5err)
-    ! Schreibe global aus dem Speicher (memspace) in die selektierte Hyperslab
-    call h5dwrite_f(dset_id, H5T_NATIVE_INTEGER, global, memdims, h5err, &
+    ! Schreibe board aus dem Speicher (memspace) in die selektierte Hyperslab
+    call h5dwrite_f(dset_id, H5T_NATIVE_INTEGER, board, memdims, h5err, &
                     file_space_id = filespace_id, mem_space_id = memspace_id)
 
   end subroutine hdf5_write_frame
+
+
+  subroutine save_frame(board, frame, dset_id, filespace_id, memspace_id)
+    integer, intent(in) :: frame
+    integer, intent(in) :: board(nx, ny)
+    integer(HID_T), intent(in) :: dset_id, filespace_id, memspace_id
+
+    call hdf5_write_frame(dset_id, filespace_id, memspace_id, frame - 1, board)
+  end subroutine save_frame
 
 
   subroutine hdf5_close_run(file_id, dset_id, filespace_id, memspace_id)

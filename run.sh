@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-export FPM_FC="mpifort"
+export FPM_FC="gfortran"
+export FPM_FFLAGS="-fopenmp"
+export OMP_NUM_THREADS=8
 
 # Logverzeichnis
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -22,9 +24,7 @@ echo "=== Build gestartet: $(date '+%Y-%m-%d %H:%M:%S') ==="
 # Build mit fpm (Verbose)
 fpm build -V
 
-# Run mit mpirun
-# Nur lokale MPI-Transporte nutzen, damit OpenMPI nicht auf TCP-Interfaces ausweicht.
-fpm run --runner "mpirun --mca btl self,vader --oversubscribe -np 4 "
+fpm run 
 
 # Zeit nach der Berechnung
 MID_MS=$(($(date +%s%N)/1000000))

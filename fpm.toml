@@ -9,7 +9,7 @@ auto-executables = true
 auto-tests = true
 auto-examples = true
 module-naming = false
-external-modules = ["mpi_f08", "hdf5"]
+external-modules = ["hdf5"]
 link = ["hdf5hl_fortran", "hdf5_fortran", "hdf5_hl", "hdf5"]
 [install]
 library = false

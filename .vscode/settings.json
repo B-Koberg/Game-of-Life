@@ -1,7 +1,8 @@
 {
     "fortran.fortls.path": "/home/bastian-koberg/Schreibtisch/Uni/.venv/bin/fortls", 
-    "fortran.linter.compilerPath": "/usr/bin/mpifort",
+    "fortran.linter.compilerPath": "/usr/bin/gfortran",
     "fortran.linter.includePaths": ["${workspaceFolder}/build/**"],
+    "fortran.linter.linterFlags": ["-fopenmp"],
     "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 1000
 }
