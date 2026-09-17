@@ -3,7 +3,7 @@
     "ratio_x":1,
     "ratio_y":1,
     "base_size":5009,
-    "frames":20,
+    "frames":100,
     "delta_frames":1,
     "periodicity":true,
     "preset":"random",
