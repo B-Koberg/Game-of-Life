@@ -5,29 +5,24 @@ module mpi_utils
     use hdf5_utils, only: hdf5_write_frame
     implicit none
     private
-    public :: split_arrays, exchange_halos, gather_and_save
-
-    integer, allocatable :: frames_buffer(:,:,:)
-    logical :: buffer_ready = .false.
+    public :: local_rows, exchange_halos, gather_and_save
 contains
-    subroutine split_arrays(local_ny, rank, size)
+    integer function local_rows(rank, size) result(local_ny)
         integer, intent(in) :: rank, size
-        integer, intent(out) :: local_ny
-
-        integer :: start_y, end_y
-        integer :: block
+        integer :: block, start_y, end_y
 
         block = ny / size
-        start_y = rank*block + 1
-        end_y   = (rank+1)*block
-        if (rank == size-1) end_y = ny
+        start_y = rank * block + 1
+        end_y = (rank + 1) * block
+
+        if (rank == size - 1) end_y = ny
 
         if (start_y > end_y) then
-            stop "Error: More processes than work items"
-        else
-            local_ny = end_y - start_y + 1
+            error stop "More processes than work items"
         end if
-    end subroutine split_arrays
+
+        local_ny = end_y - start_y + 1
+    end function local_rows
 
     subroutine exchange_halos(board_local, local_ny, rank, size)
         integer, intent(in) :: local_ny, rank, size
@@ -44,8 +39,7 @@ contains
             if (upper_rank < 0) upper_rank = size - 1
             if (lower_rank >= size) lower_rank = 0
         else
-            ! Tote Wand in y: Rand-Ranks haben keinen Nachbarn,
-            ! ihre Halos bleiben 0
+            ! An den y-Rändern bleiben die Halo-Zeilen bei 0.
             if (upper_rank < 0) upper_rank = MPI_PROC_NULL
             if (lower_rank >= size) lower_rank = MPI_PROC_NULL
         end if
@@ -55,7 +49,6 @@ contains
             board_local(:, 0), nx, MPI_INTEGER, upper_rank, 1, &
             MPI_COMM_WORLD, status, ierr)
 
-            
         call MPI_Sendrecv( &
             board_local(:, 1), nx, MPI_INTEGER, upper_rank, 2, &
             board_local(:, local_ny + 1), nx, MPI_INTEGER, lower_rank, 2, &
@@ -75,10 +68,11 @@ contains
 
         allocate(recvcounts(size), displs(size))
 
-        ! Sammle die local_ny Werte auf Rank 0
+        !local_ny auf rank 0 in revcounts sammeln
         call MPI_Gather(local_ny, 1, MPI_INTEGER, recvcounts, 1, MPI_INTEGER, 0, MPI_COMM_WORLD)
 
         if (rank == 0) then
+            !Displacements für Gatherv berechnen
             displs(1) = 0
             do p = 2, size
                 displs(p) = displs(p-1) + recvcounts(p-1) * nx
@@ -86,18 +80,13 @@ contains
 
             allocate(global(nx, ny))
 
-            ! rank 0 sammelt alle local boards in global array. 
-            ! Sendcounts, revcounts und displs sind wichtig für die Menge, form und Position der Daten die gesammelt werden sollen
-            ! (:,1) ist Startposition (0-zeile ist Halo), sencount nimmt nur bis local_ny zeile
             call MPI_Gatherv(board_current(:,1), sendcount, MPI_INTEGER, &
                             global, recvcounts*nx, displs, MPI_INTEGER, 0, MPI_COMM_WORLD)
 
-            ! Schreibe global in HDF5 Datei
             call hdf5_write_frame(dset_id, filespace_id, memspace_id, frame-1, global)
 
             deallocate(global)
         else
-            ! Gatherv ist kollektiv. Alle ranks müssen die Funktion aufrufen
             call MPI_Gatherv(board_current(:,1), sendcount, MPI_INTEGER, &
                             recvcounts, recvcounts, displs, MPI_INTEGER, 0, MPI_COMM_WORLD)
         end if

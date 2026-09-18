@@ -9,22 +9,18 @@ LOGDIR="output/.logs"
 mkdir -p "$LOGDIR"
 LOGPATH="${LOGDIR}/${LOGFILE}"
 
-# Startzeit in Millisekunden
-START_MS=$(($(date +%s%N)/1000000))
-
-fpm build 
-
-# Alle folgenden Ausgaben in die Logdatei schreiben und gleichzeitig auf der Konsole anzeigen
+# Alle Ausgaben in die Logdatei schreiben und gleichzeitig auf der Konsole anzeigen.
 exec > >(tee -a "$LOGPATH") 2>&1
+
+# Startzeit in Millisekunden
+START_MS=$(($(date +%s%N) / 1000000))
 
 echo "=== Build gestartet: $(date '+%Y-%m-%d %H:%M:%S') ==="
 
-# Build mit fpm (Verbose)
 fpm build -V
 
-# Run mit mpirun
 # Nur lokale MPI-Transporte nutzen, damit OpenMPI nicht auf TCP-Interfaces ausweicht.
-fpm run --runner "mpirun --mca btl self,vader --oversubscribe -np 4 "
+fpm run --runner "mpirun --mca btl self,vader --oversubscribe -np 4"
 
 # Zeit nach der Berechnung
 MID_MS=$(($(date +%s%N)/1000000))

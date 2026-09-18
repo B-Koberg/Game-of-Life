@@ -3,12 +3,11 @@ module gol_utils
     use parameters
     implicit none
     private
-
     public :: initialize_board, step_generation, swap_boards, count_neighbors
 contains
 
-    subroutine initialize_board(board_local, local_ny, rank)
-        integer, intent(in) :: local_ny, rank
+    subroutine initialize_board(board_local, local_ny)
+        integer, intent(in) :: local_ny
         integer, intent(inout) :: board_local(nx, 0:local_ny+1)
 
         integer :: x, y
@@ -18,7 +17,7 @@ contains
         board_local = 0
         
         select case (preset)
-            case ('verticle_lines')
+            case ('vertical_lines')
                 do y = 1, local_ny
                     do x = 1, nx
                         if (mod(x,10) == 0) then
@@ -67,9 +66,6 @@ contains
         integer, intent(inout) :: board_current(nx, 0:local_ny+1)
         integer, intent(inout) :: board_next(nx, 0:local_ny+1)
 
-        integer :: tmp(nx, 0:local_ny+1)
-
-        tmp = board_current
         board_current = board_next
         board_next = 0
     end subroutine swap_boards
@@ -81,7 +77,6 @@ contains
         integer :: left_x, right_x
 
         if (periodicity) then
-            ! Periodisch: x-Rand wrappt
             if (x == 1) then
                 left_x = nx
             else
@@ -97,9 +92,7 @@ contains
             left_x = x - 1
             right_x = x + 1
         end if
-
-        ! y-Nachbarn kommen aus den Halo-Spalten (0 und local_ny+1),
-        ! die immer im Board sind -> kein Guard noetig
+        ! Die y-Nachbarn werden durch den Halo-Austausch bereitgestellt.
         neighbors = 0
         neighbors = neighbors + board_local(x, y - 1)
         neighbors = neighbors + board_local(x, y + 1)

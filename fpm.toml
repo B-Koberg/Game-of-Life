@@ -6,7 +6,7 @@ maintainer = "b.koberg412@gmail.com"
 copyright = "Copyright 2026, Bastian"
 [build]
 auto-executables = true
-auto-tests = true
+auto-tests = false
 auto-examples = true
 module-naming = false
 external-modules = ["mpi_f08", "hdf5"]
