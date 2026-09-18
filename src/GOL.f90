@@ -4,7 +4,6 @@ module gol_utils
     implicit none
     private
     
-
     public :: initialize_board, step_generation, swap_boards, count_neighbors
 contains
 
@@ -86,9 +85,6 @@ contains
         integer, intent(inout) :: board_current(nx, ny)
         integer, intent(inout) :: board_next(nx, ny)
 
-        integer :: tmp(nx, ny)
-
-        tmp = board_current
         board_current = board_next
         board_next = 0
     end subroutine swap_boards

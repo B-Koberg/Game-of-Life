@@ -11,17 +11,14 @@ LOGDIR="output/.logs"
 mkdir -p "$LOGDIR"
 LOGPATH="${LOGDIR}/${LOGFILE}"
 
-# Startzeit in Millisekunden
-START_MS=$(($(date +%s%N)/1000000))
-
-fpm build 
-
-# Alle folgenden Ausgaben in die Logdatei schreiben und gleichzeitig auf der Konsole anzeigen
+# Alle Ausgaben in die Logdatei schreiben und gleichzeitig auf der Konsole anzeigen.
 exec > >(tee -a "$LOGPATH") 2>&1
+
+# Startzeit in Millisekunden
+START_MS=$(($(date +%s%N) / 1000000))
 
 echo "=== Build gestartet: $(date '+%Y-%m-%d %H:%M:%S') ==="
 
-# Build mit fpm (Verbose)
 fpm build -V
 
 fpm run 

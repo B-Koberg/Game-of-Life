@@ -9,7 +9,7 @@
 ## Voraussetzungen
 - **Compiler:** gfortran (programmed in 15.2.0) mit OpenMP-Support
 - **HDF5** (mit Fortran-Bindings)
-- **Build-System:** Fortran Project Mangager (fpm)
+- **Build-System:** Fortran Package Manager (fpm)
 ### Python
 - h5py, numpy, ffmpeg
 
@@ -34,7 +34,7 @@ Alle Einstellungen in `params.json`:
 | `frames` | Anzahl Simulationsschritte |
 | `delta_frames` | Alle N-Schritte wird ein Frame gespeichert |
 | `periodicity` | Periodische Randbedingungen oder "Tote Wand" |
-| `preset` | Anfangsmuster: Bisher möglich `"verticle_lines"` oder `"random"` |
+| `preset` | Anfangsmuster: `"vertical_lines"` oder `"random"` |
 | `video_height` | Video-Auflösung in Pixel (Höhe, Breite wird aus Verhältnis berechnet) |
 | `output_file` | HDF5-Ausgabepfad |
 | `output_video` | Video-Ausgabepfad |
@@ -54,8 +54,8 @@ gol/
 ```
 
 ## Anmerkungen
-- **FPS**: Die FPS des Videos sind so programmiert, dass das video immer ca. 20 Sekunden lang ist oder 1 FPS angenommen wird.
-- **Ohne Build ausführen**: Falls nur Parameter in der JSON-Datei geändert wurde, reicht es die Datei nochmal auszuführen ohne das Projekt komplett zu compelieren:
+- **FPS**: Das Video ist auf ungefähr 20 Sekunden ausgelegt, mindestens 1 FPS wird verwendet.
+- **Ohne Neubau ausführen**: Falls nur die JSON-Datei geändert wurde, kann das vorhandene Programm direkt ausgeführt werden:
 ```
 ./build/gfortran_*/app/GOL
 
@@ -63,4 +63,4 @@ python3 make_video.py
 
 xdg-open ./output/[output_video in params.json]
 ```
-- **Log Files**: Virtual Link ./output/.logs/build.log zum letzten Log  
+- **Letztes Log ansehen**: `output/.logs/build.log` ist ein Symlink auf das letzte Logfile.

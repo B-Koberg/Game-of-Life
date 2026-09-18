@@ -2,11 +2,14 @@ module parameters
     use iso_fortran_env, only: int32, real64, real32
     use json_module
     implicit none
+    private
     public :: wp
     public :: nx, ny
     public :: frames, delta_frames
     public :: periodicity, preset
     public :: output_file
+
+    public :: load_parameters, exit_with_error
 
     integer :: wp = real64
 
