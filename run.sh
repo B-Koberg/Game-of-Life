@@ -17,10 +17,10 @@ START_MS=$(($(date +%s%N) / 1000000))
 
 echo "=== Build gestartet: $(date '+%Y-%m-%d %H:%M:%S') ==="
 
-fpm build -V
+#fpm build 
 
 # Nur lokale MPI-Transporte nutzen, damit OpenMPI nicht auf TCP-Interfaces ausweicht.
-fpm run --runner "mpirun --mca btl self,vader --oversubscribe -np 4"
+fpm run --runner "mpirun --mca btl self,vader --oversubscribe -np 3"
 
 # Zeit nach der Berechnung
 MID_MS=$(($(date +%s%N)/1000000))
@@ -35,7 +35,7 @@ printf "=== Berechnung fertig: %s, Dauer: %02d:%02d:%02d.%03d ===\n" \
     "$(date '+%Y-%m-%d %H:%M:%S')" \
     "$hours" "$mins" "$secs" "$msecs"
 
-python3 make_video.py
+#python3 make_video.py
 
 # Gesamtzeit
 END_MS=$(($(date +%s%N)/1000000))
@@ -50,7 +50,7 @@ printf "=== Komplett fertig: %s, Dauer: %02d:%02d:%02d.%03d ===\n" \
     "$(date '+%Y-%m-%d %H:%M:%S')" \
     "$hours" "$mins" "$secs" "$msecs"
 
-xdg-open output/frames.mp4
+# xdg-open output/frames.mp4
 
 # Symlink auf die aktuelle Logdatei
 ln -sf "$(realpath "$LOGPATH")" "${LOGDIR}/build.log"
