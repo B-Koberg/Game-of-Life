@@ -56,6 +56,9 @@ program GOL
 
     call hdf5_close_run(file_id, dset_id, filespace_id, memspace_id)
 
+    deallocate(board_current)
+    deallocate(board_next)
+
     call print_time("Game-of-Life Simulation abgeschlossen. Beende...")
 
 contains

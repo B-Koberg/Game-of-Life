@@ -2,7 +2,7 @@
     "wp":"real64",
     "ratio_x":1,
     "ratio_y":1,
-    "base_size":1500,
+    "base_size":100,
     "frames":100,
     "delta_frames":1,
     "periodicity":true,
