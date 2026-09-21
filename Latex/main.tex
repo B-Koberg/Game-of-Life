@@ -1,0 +1,281 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\sisetup{detect-all}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\Large University Project Report\par}
+    \vspace{1.5cm}
+    {\huge\bfseries A Fortran Implementation of Conway's Game of Life\par}
+    \vspace{0.7cm}
+    {\Large with shared and distributed memory comparison\par}
+    \vfill
+    {\large Bastian Koberg\par}
+    \vspace{0.5cm}
+    {\large Advanced Scientific Programming\par}
+    \vspace{0.5cm}
+    {\large September 2026\par}
+\end{titlepage}
+
+\clearpage
+\tableofcontents
+\clearpage
+
+\section{Introduction and problem formulation}
+
+Conway's Game of Life is a simple rule-based simulation on a two-dimensional
+grid. Each grid cell is either alive or dead. The state of the grid at step $t$
+is
+\begin{equation}
+    u^t_{i,j} \in \{0,1\},
+    \qquad i=1,\ldots,n_x,\quad j=1,\ldots,n_y .
+\end{equation}
+Here, $u^t_{i,j}=1$ denotes a living cell. To update one cell, the program
+counts the eight cells directly around it. Their number is
+\begin{equation}
+    N^t_{i,j} =
+    \sum_{a=-1}^{1}\sum_{b=-1}^{1}{}^{\prime}
+    u^t_{i+a,j+b},
+\end{equation}
+where the prime excludes $a=b=0$. The update rule implemented by the program is
+\begin{equation}
+u^{t+1}_{i,j} =
+\begin{cases}
+1, & u^t_{i,j}=1 \text{ and } N^t_{i,j}\in\{2,3\},\\
+1, & u^t_{i,j}=0 \text{ and } N^t_{i,j}=3,\\
+0, & \text{otherwise.}
+\end{cases}
+\label{eq:gol-rule}
+\end{equation}
+
+The simulations use periodic boundaries, so cells at one edge use the cells at
+the opposite edge as neighbours. This avoids a special boundary treatment. A
+random initial state is used for the benchmark runs, with about half of the
+cells alive at the start.
+
+This project is useful for testing parallel programs because every cell can be
+updated from nearby cells, while many time steps have to be calculated. The
+code is written in modern Fortran, reads its parameters from a JSON file, and
+saves selected states in HDF5 files. The update is parallelized in two ways:
+OpenMP is used for shared memory, and MPI is used for distributed memory. The
+measurements show only small speedups up to four threads or ranks. For several
+problem sizes, eight processing units are even slower than one. The comparison
+therefore shows that memory access, communication, and output work limit the
+benefit of parallel execution in this implementation.
+
+\section{Numerical and parallel implementation}
+
+\subsection{Data flow and software architecture}
+The project is written in free-form Fortran and built with the Fortran Package
+Manager (fpm). The executable in \texttt{app/main.f90} loads \texttt{params.json},
+allocates two arrays, and advances the solution for the requested number of
+frames. The numerical routines are in the private module \texttt{gol\_utils};
+parameter parsing is isolated in \texttt{parameters}; and HDF5 output is handled
+by \texttt{hdf5\_utils}.
+
+Two arrays are used: \texttt{board\_current} contains $u^t$ and
+\texttt{board\_next} receives $u^{t+1}$. Every new cell reads only the old
+state. For a grid with $n_x n_y$ cells and $F$ generations, the update work is
+$\mathcal{O}(F n_x n_y)$ and the storage requirement is
+$\mathcal{O}(n_x n_y)$ for the two boards.
+
+The input used for the scaling data is $n_x=n_y=\texttt{base\_size}$,
+$F=100$, periodic boundaries, and the random preset. The tested base sizes are
+100, 500, 1000, 1250, and 1500. Every generated frame is written to an HDF5
+dataset.
+
+\subsection{OpenMP implementation}
+The nested loops for one generation use \texttt{omp do schedule(static)}. Rows
+are distributed between threads. The input array is read-only during the loop,
+and each iteration writes to a different element of \texttt{board\_next}.
+Therefore, no critical section or reduction is needed. The two separate boards
+also prevent a thread from reading cells that have already been changed in the
+same step.
+
+The neighbour routine handles the periodic boundaries and adds the eight
+relevant cells. The parallel region is created for every generation. This is
+simple, but thread management and memory access become important for small grids.
+
+\subsection{Distributed-memory implementation with MPI}
+The MPI version uses a horizontal slab decomposition. Each MPI rank owns a
+contiguous block of rows and stores two additional halo rows. Before every
+generation, neighbouring ranks exchange their boundary rows using two
+\texttt{MPI\_Sendrecv} operations. With periodic boundaries, the first and last
+ranks communicate with each other as well.
+
+The local update uses the same two-board scheme as the OpenMP version. When a
+frame is saved, the local slabs are collected with \texttt{MPI\_Gatherv} on
+rank 0, which writes the global frame to HDF5. This gives one common output
+file, but halo exchange and the repeated gather add communication overhead.
+OpenMP shares the arrays directly, while MPI must exchange boundary data
+explicitly.
+
+
+\section{Performance evaluation}
+
+\subsection{Validation and runtime overview}
+The update can be checked with small patterns. A three-cell blinker changes its
+orientation after one step and returns to its initial state after two steps. A
+$2\times2$ block must remain unchanged. These patterns can be compared with an
+independent cell-by-cell calculation using Eq.~\eqref{eq:gol-rule}. The blinker
+tests whether the neighbour count and the update rule are correct, while the
+block tests whether a stable pattern remains unchanged. Periodic boundary
+conditions can be checked with a pattern placed across an edge; it must evolve
+in the same way as the equivalent pattern in the middle of the grid.
+
+For the parallel versions, one OpenMP thread and several OpenMP threads should
+produce the same board. Similarly, an MPI run with one rank should produce the
+same global frames as a run with several ranks. The MPI comparison checks the
+halo indexing and slab assembly. The repository currently contains only a
+placeholder test executable, so these checks should be automated before the
+final submission. These known-pattern checks provide the validity check for the
+following performance measurements: the runtimes are only useful if the
+parallel versions produce the same states as the reference calculation.
+
+The first overview of the measured runtimes is given by the heatmaps in
+Fig.~\ref{fig:heatmaps}. The rows show the different grid sizes and the columns
+show the number of threads or MPI ranks. Runtime increases strongly with the
+grid size, while changing the number of processing units produces only small
+improvements. The MPI heatmap also shows higher runtimes again at eight ranks
+for some larger grids, which already indicates communication and output
+overhead.
+
+\begin{figure}[ht]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Pictures/openmp_heat.png}
+        \caption{OpenMP}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Pictures/mpi_heat.png}
+        \caption{MPI}
+    \end{minipage}
+    \caption{Runtime heatmaps for OpenMP and MPI. Each cell shows the runtime in seconds.}
+    \label{fig:heatmaps}
+\end{figure}
+
+\subsection{Strong scaling}
+For strong scaling, the total grid size is kept fixed while the number of
+threads or MPI ranks is changed. The speedup is
+\begin{equation}
+    S(P)=\frac{T_1}{T_P},
+\end{equation}
+where $T_P$ is the runtime with $P$ threads or MPI ranks.
+
+The separate Strong-Scaling plots show runtime and speedup for OpenMP in
+Fig.~\ref{fig:openmp-strong} and for MPI in Fig.~\ref{fig:mpi-strong}.
+For both implementations, increasing the grid size increases the runtime much
+more clearly than increasing the number of threads or ranks reduces it. The
+nearly horizontal changes across processing elements show that the available
+parallel speedup is small.
+
+
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.98\textwidth]{Pictures/openmp_strong.png}
+    \caption{OpenMP Strong Scaling: runtime and speedup for fixed grid sizes.}
+    \label{fig:openmp-strong}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.98\textwidth]{Pictures/mpi_strong.png}
+    \caption{MPI Strong Scaling: runtime and speedup for fixed grid sizes.}
+    \label{fig:mpi-strong}
+\end{figure}
+
+The OpenMP speedup is best for the larger grids, but it remains far below ideal
+linear scaling. For base size 1500, the runtime decreases from 25.36 seconds
+with one thread to 21.00 seconds with eight threads, corresponding to a maximum
+speedup of about 1.21. For base size 100, eight threads are slower than one.
+The MPI curves show the same pattern: the best MPI speedup is about 1.20 at
+four ranks for base size 1250, while eight ranks are slower again. Memory
+access, thread management, communication, and HDF5 output all limit the
+speedup.
+
+\subsection{Weak scaling}
+For weak scaling, the amount of work per thread or rank should stay constant
+while the total problem size grows with $P$. The parallel efficiency is
+\begin{equation}
+    E(P)=\frac{S(P)}{P}=\frac{T_1}{P T_P},
+\end{equation}
+where the ideal value is $E(P)=1$.
+
+The available runs keep the base size fixed instead of increasing it with $P$.
+Therefore, the two Weak-Scaling plots should be read as runtime and efficiency
+overviews of the available data, not as a strict weak-scaling experiment. The
+OpenMP result is shown in Fig.~\ref{fig:openmp-weak}, and the MPI result is
+shown in Fig.~\ref{fig:mpi-weak}.
+The heatmaps show that the runtime generally grows with the grid size, while
+the changes along the processing-element axis are comparatively small. MPI
+also shows a visible increase again at eight ranks for the larger grids, which
+indicates that communication and output overhead become important.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.98\textwidth]{Pictures/openmp_weak.png}
+    \caption{OpenMP Weak Scaling overview: runtime and parallel efficiency.}
+    \label{fig:openmp-weak}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.98\textwidth]{Pictures/mpi_weak.png}
+    \caption{MPI Weak Scaling overview: runtime and parallel efficiency.}
+    \label{fig:mpi-weak}
+\end{figure}
+
+Both efficiency plots fall strongly as the number of threads or ranks increases.
+The MPI runtime also rises again at eight ranks for the larger grids. This shows
+that adding processing units does not keep the runtime constant for the tested
+workload. New runs with, for example, base sizes $N_0,2N_0,4N_0,8N_0$ for
+$P=1,2,4,8$ would be needed for a strict weak-scaling result.
+
+\subsection{MPI comparison and Amdahl's law}
+For the same problem sizes, OpenMP is faster than MPI in the supplied runs.
+This is expected on one shared-memory machine: OpenMP accesses the arrays
+directly, while MPI has to exchange halo rows and gather every saved frame on
+rank 0. MPI would become useful if the problem were too large for one node.
+
+Amdahl's model for strong scaling is
+\begin{equation}
+    S_A(P)=\frac{1}{(1-p)+p/P},
+\end{equation}
+where $p$ is the parallel part of the program. The measured speedups give an
+effective parallel part of roughly 0.10--0.22. This is not a pure measurement
+of the source-code parallel part because it also includes memory access,
+communication, output, and measurement noise. The low values agree with the
+observed early limit of the speedup curves.
+
+\section{Conclusion}
+
+The project provides a configurable Fortran implementation of Game of Life
+with both OpenMP and MPI versions. The two methods produce only small speedups
+for the tested grid sizes. OpenMP performs better on one shared-memory machine,
+while MPI adds halo communication and output-gathering costs.
+
+The main result is that this implementation is not efficiently parallelizable
+for the tested workload. Memory access, communication, and HDF5 output costs
+become important after only a few threads or ranks. Larger problems,
+computation-only timings, repeated measurements, and properly scaled weak
+scaling runs would be needed to determine whether MPI becomes advantageous on
+multiple nodes.
+
+\end{document}
