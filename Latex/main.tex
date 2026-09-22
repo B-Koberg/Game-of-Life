@@ -64,16 +64,15 @@ u^{t+1}_{i,j} =
 \end{equation}
 
 In this implementation, the user can choose between periodic and dead walls as 
-boundary conditions.choose wether to use periodic boundaries or dead walls. 
-A random initial state is used for the benchmark runs, with about half of the 
-cells alive at the start.
+boundary conditions. A random initial state is used for the benchmark runs, 
+with about half of the cells alive at the start.
 
 On first thought, one might expect this problem to be highly parallelizable,
 because the update of each cell can be viewed as an independent pixel
 operation. Once the state at time $t$ is known, every cell in the next grid
 can be computed separately from the old grid. This makes the spatial part of
 the problem well suited for parallel execution. The independence is not
-complete, however: cells near a partition boundary require neighbour values
+complete however, as cells near a partition boundary require neighbour values
 owned by another thread or MPI rank. These values must either be shared
 through memory or exchanged explicitly as halo data, which introduces
 communication and synchronization overhead. A further limitation is the time
@@ -93,18 +92,17 @@ Manager (fpm). The main program in \texttt{app/main.f90} loads \texttt{params.js
 allocates two arrays, and advances the solution for the requested number of
 frames. The numerical routines are in \texttt{src/gol\_utils.f90},
 parameter parsing is isolated in \texttt{src/parameters.f90} and HDF5 output is handled
-by \texttt{src/hdf5\_utils.f90}.
+by \texttt{src/hdf5\_utils.f90}. For the MPI version there is an additional 
+\texttt{src/mpi\_utils.f90} file for MPI tools like halo exchange.
 
-Two arrays are used: \texttt{board\_current} contains $u^t$ and
-\texttt{board\_next} receives $u^{t+1}$. Every new cell reads only the old
-state. For a grid with $n_x n_y$ cells and $F$ generations, the update work is
-$\mathcal{O}(F n_x n_y)$ and the storage requirement is
-$\mathcal{O}(n_x n_y)$ for the two boards.
+Two arrays are used are \texttt{board\_current} and \texttt{board\_next} which 
+contain $u^t$ and $u^{t+1}$. Every new cell reads only the old state. For a 
+grid with $n_x n_y$ cells and $F$ generations, the update work is $\mathcal{O}(F n_x n_y)$ 
+and the storage requirement is $\mathcal{O}(n_x n_y)$ for the two boards.
 
 The input used for the scaling data is $n_x=n_y=\texttt{base\_size}$,
 $F=100$, periodic boundaries, and the random preset. The tested base sizes are
-100, 500, 1000, 1250, and 1500. Every generated frame is written to an HDF5
-dataset.
+100, 500, 1000, 1250, and 1500 while the number of threads or MPI ranks is 1, 2, 3, 4, and 8.
 
 \subsection{Shared-memory implementation with OpenMP}
 The nested loops for one generation use \texttt{omp do schedule(static)}. Rows
@@ -148,12 +146,12 @@ reproducible test case. Its evolution can be compared with an independent
 cell-by-cell calculation using Eq.~\eqref{eq:gol-rule}.
 
 The random initialisation used for the benchmarks does not provide the same
-test: since the random distribution generates a different starting pattern in
-each run, differences in the output cannot be attributed unambiguously to the
+test. Since the random distribution generates a different starting pattern in
+each run, differences in the output cannot be attributed directly to the
 implementation. Therefore, validation should always use the identical fixed
 initial pattern, while random initial states are appropriate for performance
 measurements. The parallel versions should then be checked against the same
-reference: one OpenMP thread and several OpenMP threads must produce identical
+reference, because one OpenMP thread and several OpenMP threads must produce identical
 boards, and an MPI run with one rank must produce the same global frames as a
 run with several ranks. This comparison also checks the halo indexing and slab
 assembly. These deterministic pattern checks provide the validity check for
@@ -209,14 +207,14 @@ parallel speedup is small.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.98\textwidth]{Pictures/openmp_strong.png}
-    \caption{OpenMP Strong Scaling: runtime and speedup for fixed grid sizes.}
+    \caption{OpenMP Strong Scaling, runtime and speedup for fixed grid sizes.}
     \label{fig:openmp-strong}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.98\textwidth]{Pictures/mpi_strong.png}
-    \caption{MPI Strong Scaling: runtime and speedup for fixed grid sizes.}
+    \caption{MPI Strong Scaling, runtime and speedup for fixed grid sizes.}
     \label{fig:mpi-strong}
 \end{figure}
 
@@ -224,7 +222,7 @@ The OpenMP speedup is best for the larger grids, but it remains far below ideal
 linear scaling. For base size 1500, the runtime decreases from 25.36 seconds
 with one thread to 21.00 seconds with eight threads, corresponding to a maximum
 speedup of about 1.21. For base size 100, eight threads are slower than one.
-The MPI curves show the same pattern: the best MPI speedup is about 1.20 at
+The MPI curves show the same pattern, with the best MPI speedup at about 1.20 at
 four ranks for base size 1250, while eight ranks are slower again. Memory
 access, thread management, communication, and HDF5 output all limit the
 speedup.
@@ -251,13 +249,8 @@ where the ideal value is $E(P)=1$.
 
 The available runs keep the base size fixed instead of increasing it with $P$.
 Therefore, the two Weak-Scaling plots should be read as runtime and efficiency
-overviews of the available data, not as a strict weak-scaling experiment. The
-OpenMP and MPI results are shown side by side in
-Figs.~\ref{fig:openmp-weak} and~\ref{fig:mpi-weak}.
-The heatmaps show that the runtime generally grows with the grid size, while
-the changes along the processing-element axis are comparatively small. MPI
-also shows a visible increase again at eight ranks for the larger grids, which
-indicates that communication and output overhead become important.
+overviews of the available data. The OpenMP and MPI results are shown side by 
+side in Figs.~\ref{fig:openmp-weak} and~\ref{fig:mpi-weak}.
 
 \begin{figure}[ht]
     \centering
@@ -279,7 +272,7 @@ The efficiency plots show a clear decrease as the number of threads or ranks
 increases. For MPI, the curves for the different base sizes converge to nearly
 the same low efficiency at eight ranks. This indicates that communication and
 output overhead dominate the computation at higher rank counts, largely
-independently of the problem size. The OpenMP results show a different trend:
+independently of the problem size. The OpenMP results show a different trend,
 at eight threads, the larger problem sizes retain a higher efficiency than the
 smaller ones. The additional work of larger grids therefore amortizes the
 thread-management and memory-access overhead more effectively. 
@@ -301,7 +294,7 @@ where $p$ is the parallel fraction of the total runtime. Amdahl's law states
 that only this fraction can benefit from additional threads or processes. From
 the code, the cell-update loop is the main parallel part. In every generation,
 however, it is accompanied by three full-array operations outside the parallel
-region: resetting \texttt{board\_next}, copying \texttt{board\_next} to
+region, resetting \texttt{board\_next}, copying \texttt{board\_next} to
 \texttt{board\_current}, and resetting \texttt{board\_next} again. Approxmating 
 the parallel fraction one can estimate a parallel fraction of $p \approx 0.20$ 
 for the OpenMP version. The MPI version has additional communication and output 

@@ -64,3 +64,5 @@ python3 make_video.py
 xdg-open ./output/[output_video in params.json]
 ```
 - **Letztes Log ansehen**: `output/.logs/build.log` ist ein Symlink auf das letzte Logfile.
+
+- **Working Precision**: Genaugenommen wird die gesetzte Workinprecision nirgendswo benutzt. Sie ist ein Artefakt aus einem anderen Programm und die Berechnungen in diesem Projekt sind integer addition bis maximal 8. Sie wurde jedoch behalten falls man in Zukunft kompliziertere Regeln erstellen möchte.
